@@ -1,0 +1,28 @@
+#!/usr/bin/Rscript
+mydata <- read.table("car.csv", header=TRUE, sep=",")
+svg(filename="car_consumption_vs_temp.svg", 
+    width=5, 
+    height=4, 
+    pointsize=12)
+plot(mydata$temperature, mydata$consumption, main="Car fuel consumption", xlab="Temperature (deg C)", ylab="Fuel consumption (l/100 km)")
+dev.off()
+
+fit <- lm(time ~ inverse_speed, data=mydata)
+summary(fit)
+svg(filename="time_vs_inverse_speed.svg", 
+    width=5, 
+    height=4, 
+    pointsize=12)
+plot(mydata$inverse_speed, mydata$time, main="Time vs inverse speed", ylab="Time (minutes)", xlab="Inverse speed (min/km)")
+abline(fit, col="red")
+dev.off()
+
+fit <- lm(consumption ~ speed + temperature + direction, data=mydata)
+summary(fit)
+svg(filename="car_partials.svg", 
+    width=10, 
+    height=3, 
+    pointsize=12)
+par(mfrow=c(1,3))
+termplot(fit, partial.resid=TRUE, main=c("Effect of speed", "Effect of temperature", "Effect of way up / way back"), xlabs=c("Speed (km/h)","Temperature (deg C)","Morning/afternoon"), ylabs=c("Effect on consumption (l/100 km)","Effect on consumption (l/100 km)","Effect on consumption (l/100 km)"))
+dev.off()
