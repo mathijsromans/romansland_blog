@@ -1,5 +1,6 @@
 this_file_is_not_a_function_definition = 0;
-addpath("..")
+addpath(".")
+global output_dir = 'build/part5/'
 
 function y = my_heaviside(x, zero_value = 0.5)
   y = cast (x > 0, class (x));
@@ -23,6 +24,7 @@ function [Vs,D] = get_states(V, pstep, N)
 endfunction
 
 function generate_V_graphs(V_steps, pstep, pmax, N)
+  global output_dir
   for Vidx = 1:length(V_steps)
     V = V_steps(Vidx);
 
@@ -39,11 +41,12 @@ function generate_V_graphs(V_steps, pstep, pmax, N)
     set(gca,'xtick',[],'ytick',[-6:1:6])
     set(gcf, 'Position',  [1200, 400, 200, 400])
     set(gcf,'PaperPositionMode','auto')
-    saveas(gcf,['chart_', num2str(Vidx,'%03.f'), '.png'])
+    saveas(gcf,[output_dir, 'chart_', num2str(Vidx,'%03.f'), '.png'])
   end
 endfunction
 
-function square_well_potential(m, L, N, xmax)
+function square_well_potential(L, N, xmax)
+  global output_dir
   xn = linspace(-xmax, xmax, N);
   V = 1;
   Vx = -V * my_heaviside(L-abs(xn+0.001));
@@ -57,11 +60,12 @@ function square_well_potential(m, L, N, xmax)
   yticklabels({'-V', '0'})
   xlabel('x')
   ylabel('V')
-  title('Finite square well potential')
-  print(gcf,'finite_square_well_potential.png','-dpng', '-S400,200');
+  title('Finite square well potential')  
+  print(gcf,[output_dir 'finite_square_well_potential.png'],'-dpng', '-S400,200');
 endfunction
 
 function wavefunctions(V, N, pstep, pmax, xmax)
+  global output_dir
   xn = linspace(-xmax*pi, xmax*pi, N);
   [Vs,D] = get_states(V, pstep, N);
   num_states = 3;
@@ -78,8 +82,8 @@ function wavefunctions(V, N, pstep, pmax, xmax)
     end
     axis([-10 10])
     xlabel('p')
-    ylabel('Amplitude')
-    title({'Finite square well',['with V=', num2str(V,'%1.1f'),' n=', num2str(length(D)-3+idx)]})  
+    ylabel('Re/Im')
+    title({'Finite square well',['with V=', num2str(V,'%1.1f')]})  
     arbitrary_factor = 0.1;
     ax = arbitrary_factor * fftshift(fft(ifftshift(phi)));  
     subplot(num_states,2,2*(idx-1)+2);
@@ -93,9 +97,9 @@ function wavefunctions(V, N, pstep, pmax, xmax)
     axis([-2 2])
     xlabel('x')
     ylabel('Re/Im')
-    title({'Finite square well',['with V=', num2str(V,'%1.1f'),' n=', num2str(length(D)-3+idx)]})
+    title({'Finite square well',['with V=', num2str(V,'%1.1f')]})
   endfor
-  print(gcf,'wavefunctions.png','-dpng', '-S600,600');
+  print(gcf,[output_dir 'wavefunctions.png'],'-dpng', '-S600,600');
 endfunction
 
 N = 401  # use odd!
@@ -103,12 +107,13 @@ N = 401  # use odd!
 #square_well_potential(m, L, N, 3*L)
 
 L=1
-xmax = 5*L
+xmax = 10*L
 pmax = 0.5*N/xmax
 pstep = 2*pmax/(N-1)
 V = 1
 
 #[Vs,D] = get_states(V, pstep, N);
 
-#generate_V_graphs([0:0.1:2], pstep, pmax, N)
+square_well_potential(1, N, 2.5)
+generate_V_graphs([0:0.1:1.5], pstep, pmax, N)
 wavefunctions(3*V, N, pstep, pmax, xmax)
