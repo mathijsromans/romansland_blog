@@ -23,8 +23,10 @@ function [Vs,D] = get_states(V, pstep, N)
   [Vs,D] = eigenshuffle(M);
 endfunction
 
-function generate_V_graphs(V_steps, pstep, pmax, N)
+function generate_V_graphs(V_steps, xmax, N)
   global output_dir
+  pmax = 0.5*N/xmax
+  pstep = 2*pmax/(N-1)
   for Vidx = 1:length(V_steps)
     V = V_steps(Vidx);
 
@@ -64,15 +66,16 @@ function square_well_potential(L, N, xmax)
   print(gcf,[output_dir 'finite_square_well_potential.png'],'-dpng', '-S400,200');
 endfunction
 
-function wavefunctions(V, N, pstep, pmax, xmax)
+function wavefunctions(V, N, xmax, states, xaxismax, filename)
   global output_dir
+  pmax = 0.5*N/xmax
+  pstep = 2*pmax/(N-1)
   xn = linspace(-xmax*pi, xmax*pi, N);
   [Vs,D] = get_states(V, pstep, N);
-  num_states = 3;
-  for idx = 1:num_states
-    phi = Vs(:,length(D)-num_states+idx);
+  for idx = 1:length(states)
+    phi = Vs(:,states(idx));
     pn = [-pmax:pstep:pmax];
-    subplot(num_states,2,2*(idx-1)+1);
+    subplot(length(states),2,2*(idx-1)+1);
     if max(abs(real(phi))) > 0.1 * max(abs(imag(phi)))  
       plot(pn, real(phi),'Color','r','LineWidth',2)
       hold on
@@ -80,13 +83,13 @@ function wavefunctions(V, N, pstep, pmax, xmax)
     if max(abs(imag(phi))) > 0.1 * max(abs(real(phi)))  
       plot(pn, imag(phi),'Color','b','LineWidth',2)
     end
-    axis([-10 10])
+    axis([-5 5])
     xlabel('p')
-    ylabel('Re/Im')
-    title({'Finite square well',['with V=', num2str(V,'%1.1f')]})  
-    arbitrary_factor = 0.1;
+    ylabel('Re/Im [\phi]')
+    title({'\phi(p)',['with V=', num2str(V,'%1.1f')]})  
+    arbitrary_factor = 0.05;
     ax = arbitrary_factor * fftshift(fft(ifftshift(phi)));  
-    subplot(num_states,2,2*(idx-1)+2);
+    subplot(length(states),2,2*(idx-1)+2);
     if max(abs(real(ax))) > 0.1 * max(abs(imag(ax)))
       plot(xn, real(ax),'Color','r','LineWidth',2)
       hold on
@@ -94,12 +97,15 @@ function wavefunctions(V, N, pstep, pmax, xmax)
     if max(abs(imag(ax))) > 0.1 * max(abs(real(ax)))  
       plot(xn, imag(ax),'Color','b','LineWidth',2)
     end
-    axis([-2 2])
+    axis([-xaxismax xaxismax])
     xlabel('x')
-    ylabel('Re/Im')
-    title({'Finite square well',['with V=', num2str(V,'%1.1f')]})
+    ylabel('Re/Im [\psi]')
+    title({'\psi(x)',['with V=', num2str(V,'%1.1f')]})
   endfor
-  print(gcf,[output_dir 'wavefunctions.png'],'-dpng', '-S600,600');
+#  print(gcf,[output_dir filename], '-dpng', '-S600,600')
+  print(gcf,[output_dir filename],
+            '-dpng',
+            ['-S', num2str(600,'%d'), ',', num2str(length(states) * 200,'%d')]);
 endfunction
 
 N = 401  # use odd!
@@ -108,12 +114,12 @@ N = 401  # use odd!
 
 L=1
 xmax = 10*L
-pmax = 0.5*N/xmax
-pstep = 2*pmax/(N-1)
 V = 1
 
-#[Vs,D] = get_states(V, pstep, N);
-
+[Vs,D] = get_states(0.5, pstep, N);
+bound_state_energy = D(length(D))
+wavefunctions(0.5, N, xmax, N:N, 3, 'bound_state_0.5.png')
+wavefunctions(0.5, 101, 20, 1:1, 20, 'unbound_state_0.5.png')
 square_well_potential(1, N, 2.5)
-generate_V_graphs([0:0.1:1.5], pstep, pmax, N)
-wavefunctions(3*V, N, pstep, pmax, xmax)
+generate_V_graphs([0:0.1:1.5], xmax, N)
+wavefunctions(3, N, xmax, N-2:N, 3, 'wavefunctions3.png')
